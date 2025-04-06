@@ -1,31 +1,56 @@
+import org.openrndr.ApplicationBuilder
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
+import org.openrndr.draw.ColorBuffer
 import org.openrndr.draw.loadFont
-import org.openrndr.draw.loadImage
-import org.openrndr.draw.tint
-import kotlin.math.cos
-import kotlin.math.sin
+import org.openrndr.extra.color.presets.DIM_GRAY
+import org.openrndr.math.Vector2
+import java.io.File
+
+val DATA_FOLDER = File("./data")
+
+val bubbles = mutableListOf(
+    Bubble("apple"),
+    Bubble("stick"),
+)
 
 fun main() = application {
     configure {
         width = 768
         height = 576
     }
+    loadData()
+    graphApp()
+}
 
-    program {
-        val image = loadImage("data/images/pm5544.png")
-        val font = loadFont("data/fonts/default.otf", 64.0)
 
-        extend {
-            drawer.drawStyle.colorMatrix = tint(ColorRGBa.WHITE.shade(0.2))
-            drawer.image(image)
 
-            drawer.fill = ColorRGBa.PINK
-            drawer.circle(cos(seconds) * width / 2.0 + width / 2.0, sin(0.5 * seconds) * height / 2.0 + height / 2.0, 140.0)
+fun loadData() = DATA_FOLDER.listFiles()?.forEach { file ->
+    if (file.isFile) {
+        println(file.absolutePath)
+    }
+}
 
-            drawer.fontMap = font
+fun ApplicationBuilder.graphApp() = program {
+    val font = loadFont("data/fonts/default.otf", 12.0)
+
+    extend {
+        drawer.clear(ColorRGBa.DIM_GRAY)
+        drawer.fontMap = font
+
+        // Draw bubbles
+        bubbles.forEachIndexed { idx, bubble ->
+            drawer.fill = ColorRGBa.TRANSPARENT
+            drawer.stroke = ColorRGBa.WHITE
+            drawer.circle(Vector2(60.0, (idx + 1) * 60.0), 20.0)
+
             drawer.fill = ColorRGBa.WHITE
-            drawer.text("OPENRNDR", width / 2.0, height / 2.0)
+            drawer.text(bubble.id, 46.0, (idx + 1) * 61.0)
+
+            // Draw image if present
+            bubble.image?.let { image -> drawer.image(image) }
         }
     }
 }
+
+data class Bubble(val id: String, val image: ColorBuffer? = null)
